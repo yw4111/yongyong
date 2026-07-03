@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Site Admin</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1e2a3a; color: #D5B893; min-height: 100vh; padding: 2rem 1.25rem 4rem; }
+    .container { max-width: 720px; margin: 0 auto; }
+    header { margin-bottom: 2.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid #3a4f6a; }
+    header h1 { font-size: 1.4rem; color: #D5B893; margin-bottom: 0.2rem; }
+    header p { font-size: 0.85rem; color: #617891; }
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .tab-btn { background: none; border: 1px solid #3a4f6a; color: #c4a882; padding: 0.5rem 1.2rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-family: inherit; transition: all 0.15s; }
+    .tab-btn:hover { border-color: #D5B893; color: #D5B893; }
+    .tab-btn.active { background: #D5B893; color: #25344F; border-color: #D5B893; font-weight: bold; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .form-group { margin-bottom: 1.25rem; }
+    label { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: #617891; margin-bottom: 0.4rem; }
+    input[type="text"], input[type="date"], input[type="url"], textarea {
+      width: 100%; background: #1a2535; border: 1px solid #3a4f6a; border-radius: 4px;
+      color: #D5B893; font-family: Georgia, serif; font-size: 0.95rem;
+      padding: 0.6rem 0.75rem; outline: none; transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus { border-color: #D5B893; }
+    textarea { resize: vertical; min-height: 200px; line-height: 1.6; }
+    .hint { font-size: 0.75rem; color: #617891; margin-top: 0.3rem; }
+    .radio-group { display: flex; gap: 1rem; }
+    .radio-group label { display: flex; align-items: center; gap: 0.4rem; text-transform: none; letter-spacing: 0; font-size: 0.9rem; color: #c4a882; cursor: pointer; }
+    .radio-group input[type="radio"] { width: auto; padding: 0; }
+    .btn-row { display: flex; gap: 0.75rem; margin-top: 1.75rem; flex-wrap: wrap; }
+    .btn { padding: 0.65rem 1.4rem; border-radius: 4px; font-family: inherit; font-size: 0.9rem; cursor: pointer; border: none; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #D5B893; color: #25344F; font-weight: bold; }
+    .btn-secondary { background: #6F4D38; color: #e8d5bb; }
+    .output-box { display: none; margin-top: 1.75rem; background: #1a2535; border: 1px solid #3a4f6a; border-radius: 6px; padding: 1.25rem; }
+    .output-box h3 { font-size: 0.85rem; color: #617891; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .step { background: #25344F; border-radius: 4px; padding: 0.75rem 1rem; margin-bottom: 0.75rem; font-size: 0.88rem; line-height: 1.5; }
+    .step strong { color: #D5B893; }
+    .step code { background: #1a2535; padding: 0.1rem 0.35rem; border-radius: 3px; font-family: monospace; font-size: 0.85rem; color: #c4a882; }
+    .section-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #617891; margin-bottom: 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid #3a4f6a; }
+    .section-label:not(:first-child) { margin-top: 2rem; }
+    .items-list { margin-top: 1rem; }
+    .item-row { display: flex; align-items: center; justify-content: space-between; background: #25344F; border-radius: 4px; padding: 0.6rem 0.85rem; margin-bottom: 0.5rem; font-size: 0.88rem; }
+    .item-info { flex: 1; }
+    .item-title { color: #D5B893; font-weight: bold; }
+    .item-meta { color: #617891; font-size: 0.78rem; margin-top: 0.1rem; }
+    .item-actions { display: flex; gap: 0.4rem; }
+    .btn-small { padding: 0.25rem 0.6rem; border-radius: 3px; font-size: 0.78rem; cursor: pointer; border: none; font-family: inherit; }
+    .btn-small-danger { background: #632024; color: #e8d5bb; }
+    .btn-small-danger:hover { opacity: 0.8; }
+    .btn-small-edit { background: #617891; color: #e8d5bb; }
+    .btn-small-edit:hover { opacity: 0.8; }
+    .empty-state { color: #617891; font-size: 0.85rem; font-style: italic; padding: 0.5rem 0; }
+    .editing-banner { background: #2d4a2d; border: 1px solid #4a7a4a; border-radius: 4px; padding: 0.5rem 0.85rem; margin-bottom: 1rem; font-size: 0.85rem; color: #a8d4a8; display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Site Admin</h1>
+    <p>Add content without touching code. Everything runs from your outputs folder.</p>
+  </header>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('thoughts', this)">+ New Thought</button>
+    <button class="tab-btn" onclick="switchTab('entry', this)">+ New Project / Note</button>
+    <button class="tab-btn" onclick="switchTab('manage', this)">Manage</button>
+  </div>
+
+  <!-- NEW THOUGHT -->
+  <div class="tab-panel active" id="tab-thoughts">
+    <div class="editing-banner" id="t-editing-banner">Editing: <span id="t-editing-name"></span></div>
+    <p class="section-label">New post for "my thoughts"</p>
+    <div class="form-group">
+      <label>Post title</label>
+      <input type="text" id="t-title" placeholder="What's this post about?" />
+    </div>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="t-date" />
+    </div>
+    <div class="form-group">
+      <label>Short teaser <span style="font-size:0.75rem;color:#617891">(shown on the card)</span></label>
+      <input type="text" id="t-excerpt" placeholder="One sentence summary..." />
+    </div>
+    <div class="form-group">
+      <label>Content <span style="font-size:0.75rem;color:#617891">(blank line = new paragraph)</span></label>
+      <textarea id="t-content" placeholder="Write your post here...&#10;&#10;Each blank line becomes a new paragraph."></textarea>
+      <p class="hint">Tip: ## for subheading, *asterisks* for italics.</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="generateThought()">Generate &amp; download ↓</button>
+      <button class="btn btn-secondary" onclick="clearForm('thought')">Clear</button>
+    </div>
+    <div class="output-box" id="t-output">
+      <h3>Done — two files downloaded</h3>
+      <div class="step">
+        <strong>✓ <span id="t-filename"></span></strong> — move into your <code>posts/</code> folder.<br><br>
+        <strong>✓ blog.html</strong> — replace the existing <code>blog.html</code> in your outputs folder.
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW PROJECT / NOTE -->
+  <div class="tab-panel" id="tab-entry">
+    <div class="editing-banner" id="e-editing-banner">Editing: <span id="e-editing-name"></span></div>
+    <p class="section-label">New card for "projects &amp; notes"</p>
+    <div class="form-group">
+      <label>Type</label>
+      <div class="radio-group">
+        <label><input type="radio" name="e-type" value="Project" checked /> Project</label>
+        <label><input type="radio" name="e-type" value="Note" /> Note</label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="e-title" placeholder="What is it?" />
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="e-desc" style="min-height:100px" placeholder="What's interesting about it?"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Preview image <span style="font-size:0.75rem;color:#617891">(optional)</span></label>
+      <input type="text" id="e-img" placeholder="Paste image URL or path — or auto-generate from a PDF below" />
+      <div style="margin-top:0.6rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+        <input type="file" id="e-pdf" accept=".pdf" style="display:none" onchange="previewPdf(this)" />
+        <button type="button" class="btn btn-secondary" style="font-size:0.8rem;padding:0.4rem 0.85rem" onclick="document.getElementById('e-pdf').click()">Generate from PDF</button>
+        <span id="pdf-status" style="font-size:0.8rem;color:#617891;"></span>
+      </div>
+      <div id="pdf-preview" style="display:none;margin-top:0.75rem;">
+        <img id="pdf-preview-img" style="max-width:220px;border:1px solid #3a4f6a;display:block;" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Link <span style="font-size:0.75rem;color:#617891">(optional — GitHub, PDF path, live site, etc.)</span></label>
+      <input type="url" id="e-link" placeholder="https://... or files/my.pdf" />
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="generateEntry()">Generate &amp; download ↓</button>
+      <button class="btn btn-secondary" onclick="clearForm('entry')">Clear</button>
+    </div>
+    <div class="output-box" id="e-output">
+      <h3>Done</h3>
+      <div class="step">
+        <strong>✓ projects.html</strong> — replace the existing <code>projects.html</code> in your outputs folder.
+      </div>
+    </div>
+  </div>
+
+  <!-- MANAGE -->
+  <div class="tab-panel" id="tab-manage">
+    <p class="section-label">Blog posts</p>
+    <p style="font-size:0.85rem;color:#617891;margin-bottom:1rem;">Deleting removes the card from blog.html next time you regenerate. The .html post file needs deleting manually.</p>
+    <div class="items-list" id="posts-list"></div>
+    <div class="btn-row" style="margin-top:1rem;">
+      <button class="btn btn-secondary" onclick="redownloadBlog()">Re-download blog.html</button>
+    </div>
+    <p class="section-label">Projects &amp; notes</p>
+    <div class="items-list" id="entries-list"></div>
+    <div class="btn-row" style="margin-top:1rem;">
+      <button class="btn btn-secondary" onclick="redownloadProjects()">Re-download projects.html</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('t-date').valueAsDate = new Date();
+  let editingPostIdx = -1, editingEntryIdx = -1;
+
+  // Seed legacy posts that were created manually (not via admin)
+  (function seedLegacy() {
+    const posts = JSON.parse(localStorage.getItem('yong_posts') || '[]');
+    const slugs = posts.map(p => p.slug);
+    const legacy = [
+      { slug: 'gym-lockers', title: 'gym lockers', dateStr: 'June 2026', rawDate: '2026-06-01', excerpt: 'gym locker equilibria', rawContent: 'when you have a room full of homogenous lockers, the only thing that you really need is for the locker to be empty. if you randomly choose a locker that is used, you go to a different locker, which you continue to choose until you realise it is regularly used. this means that we should reach a state of equilibrium where everyone uses the same locker because you mentally blacklist the other ones.\n\nthis is actually pretty similar to queues in supermarkets, but feels a bit more fun because you don\'t see the decisions of other people you just see the outcomes.' }
+    ];
+    let changed = false;
+    legacy.forEach(p => { if (!slugs.includes(p.slug)) { posts.push(p); changed = true; } });
+    if (changed) localStorage.setItem('yong_posts', JSON.stringify(posts));
+  })();
+
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  async function previewPdf(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const status = document.getElementById('pdf-status');
+    status.textContent = 'Rendering…';
+    try {
+      const ab  = await file.arrayBuffer();
+      const pdf  = await pdfjsLib.getDocument({ data: ab }).promise;
+      const page = await pdf.getPage(1);
+      const bv   = page.getViewport({ scale: 1 });
+      const vp   = page.getViewport({ scale: 700 / bv.width });
+      const canvas = document.createElement('canvas');
+      canvas.width = vp.width; canvas.height = vp.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      document.getElementById('e-img').value = dataUrl;
+      document.getElementById('pdf-preview-img').src = dataUrl;
+      document.getElementById('pdf-preview').style.display = 'block';
+      status.textContent = '✓ Done';
+    } catch (err) { status.textContent = 'Error: ' + err.message; }
+  }
+
+  function getPosts()    { return JSON.parse(localStorage.getItem('yong_posts')    || '[]'); }
+  function savePosts(p)  { localStorage.setItem('yong_posts', JSON.stringify(p)); }
+  function getEntries()  { return JSON.parse(localStorage.getItem('yong_projects') || '[]'); }
+  function saveEntries(e){ localStorage.setItem('yong_projects', JSON.stringify(e)); }
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+    if (name === 'manage') { renderPostsList(); renderEntriesList(); }
+  }
+
+  function slugify(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+  function formatDate(s) {
+    if (!s) return '';
+    return new Date(s + 'T00:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  }
+  function parseContent(raw) {
+    return raw.trim().split(/\n\s*\n/).map(block => {
+      block = block.trim();
+      if (block.startsWith('## ')) return '<h2>' + block.slice(3) + '<\/h2>';
+      return '<p>' + block.replace(/\*(.*?)\*/g, '<em>$1<\/em>').replace(/\n/g, '<br>') + '<\/p>';
+    }).join('\n\n      ');
+  }
+  function download(filename, content) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type: 'text/html' }));
+    a.download = filename; a.click();
+  }
+
+  function buildBlogHtml(posts) {
+    const cards = posts.map(p =>
+      '\n      <a class="note" href="posts/' + p.slug + '.html">\n        <div class="note-date">' + p.dateStr + '<\/div>\n        <div class="note-title">' + p.title + '<\/div>\n        <div class="note-excerpt">' + (p.excerpt||'') + '<\/div>\n      <\/a>'
+    ).join('');
+    return '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" \/>\n  <meta name="viewport" content="width=device-width, initial-scale=1" \/>\n  <title>my thoughts | yong<\/title>\n  <link rel="stylesheet" href="style.css" \/>\n<\/head>\n<body>\n  <div class="container">\n    <nav><ul>\n      <li><a href="index.html">home<\/a><\/li>\n      <li><a href="blog.html">my thoughts<\/a><\/li>\n      <li><a href="projects.html">projects &amp; notes<\/a><\/li>\n      <li><a href="misc.html">misc<\/a><\/li>\n    <\/ul><\/nav>\n    <h1>my thoughts<\/h1>\n    <p class="subtitle"> when i think of nonsense, i update this log<\/p>\n    <div class="notes-grid">' + cards + '\n    <\/div>\n    <footer><div class="social-links"><a href="mailto:yonggw3307@gmail.com">Email<\/a> | <a href="https://www.linkedin.com/in/yongguiwang/" target="_blank" rel="noopener">LinkedIn<\/a> | <a href="https://www.instagram.com/yw41111/" target="_blank" rel="noopener">Instagram<\/a><\/div><p class="last-updated"><\/p><\/footer>\n  <\/div>\n  <script src="site.js"><\/script>\n<\/body>\n<\/html>';
+  }
+
+  function buildProjectsHtml(entries) {
+    function renderCards(items) {
+      return items.map(e => {
+        const tag     = '<div class="card-tag">' + e.type + '<\/div>';
+        const title   = '<div class="card-title">' + e.title + '<\/div>';
+        const img     = e.img  ? '\n        <img class="card-img" src="' + e.img + '" alt="" loading="lazy" \/>' : '';
+        const overlay = e.desc ? '\n        <div class="card-desc-overlay">' + e.desc + '<\/div>' : '';
+        const inner   = '\n        <div class="card-header">' + tag + title + '<\/div>' + img + overlay + '\n      ';
+        return e.link
+          ? '\n      <a class="card" href="' + e.link + '" target="_blank" rel="noopener">' + inner + '<\/a>'
+          : '\n      <div class="card">' + inner + '<\/div>';
+      }).join('');
+    }
+    const projects = entries.filter(e => e.type === 'Project');
+    const notes    = entries.filter(e => e.type === 'Note');
+    const ps = '\n      <h2>projects<\/h2>\n      <div class="cards-grid">' + renderCards(projects) + '\n      <\/div>';
+    const ns = '\n      <h2>notes<\/h2>\n      <div class="cards-grid">' + renderCards(notes) + '\n      <\/div>';
+    return '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" \/>\n  <meta name="viewport" content="width=device-width, initial-scale=1" \/>\n  <title>projects &amp; notes | yong<\/title>\n  <link rel="stylesheet" href="style.css" \/>\n<\/head>\n<body>\n  <div class="container">\n    <nav><ul>\n      <li><a href="index.html">home<\/a><\/li>\n      <li><a href="blog.html">my thoughts<\/a><\/li>\n      <li><a href="projects.html">projects &amp; notes<\/a><\/li>\n      <li><a href="misc.html">misc<\/a><\/li>\n    <\/ul><\/nav>\n    <main>\n      <h1>projects &amp; notes<\/h1>\n      <p class="page-intro">write an intro here.<\/p>' + ps + ns + '\n    <\/main>\n    <footer><div class="social-links"><a href="mailto:yonggw3307@gmail.com">Email<\/a> | <a href="https://www.linkedin.com/in/yongguiwang/" target="_blank" rel="noopener">LinkedIn<\/a> | <a href="https://www.instagram.com/yw41111/" target="_blank" rel="noopener">Instagram<\/a><\/div><p class="last-updated"><\/p><\/footer>\n  <\/div>\n  <script src="site.js"><\/script>\n<\/body>\n<\/html>';
+  }
+
+  function generateThought() {
+    const title   = document.getElementById('t-title').value.trim();
+    const date    = document.getElementById('t-date').value;
+    const excerpt = document.getElementById('t-excerpt').value.trim();
+    const content = document.getElementById('t-content').value;
+    if (!title)          { alert('Please enter a title.'); return; }
+    if (!content.trim()) { alert('Please write some content.'); return; }
+    const slug    = slugify(title);
+    const dateStr = formatDate(date);
+    const body    = parseContent(content);
+    const postHtml = '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" \/>\n  <meta name="viewport" content="width=device-width, initial-scale=1" \/>\n  <title>' + title + ' | yong<\/title>\n  <link rel="stylesheet" href="../style.css" \/>\n<\/head>\n<body>\n  <div class="container">\n    <nav><ul>\n      <li><a href="../index.html">home<\/a><\/li>\n      <li><a href="../blog.html">my thoughts<\/a><\/li>\n      <li><a href="../projects.html">projects &amp; notes<\/a><\/li>\n      <li><a href="../misc.html">misc<\/a><\/li>\n    <\/ul><\/nav>\n    <main>\n      <h1>' + title + '<\/h1>\n      <p style="font-size:0.85rem;color:#617891;margin-bottom:1.8rem;">' + dateStr + '<\/p>\n      ' + body + '\n    <\/main>\n    <footer><div class="social-links"><a href="mailto:yonggw3307@gmail.com">Email<\/a> | <a href="https://www.linkedin.com/in/yongguiwang/" target="_blank" rel="noopener">LinkedIn<\/a> | <a href="https://www.instagram.com/yw41111/" target="_blank" rel="noopener">Instagram<\/a><\/div><p class="last-updated"><\/p><\/footer>\n  <\/div>\n  <script src="../site.js"><\/script>\n<\/body>\n<\/html>';
+    const posts = getPosts();
+    const entry = { slug, title, dateStr, rawDate: date, excerpt, rawContent: content };
+    if (editingPostIdx >= 0) {
+      posts[editingPostIdx] = entry; editingPostIdx = -1;
+      document.getElementById('t-editing-banner').style.display = 'none';
+    } else {
+      const ex = posts.findIndex(p => p.slug === slug);
+      if (ex >= 0) posts[ex] = entry; else posts.unshift(entry);
+    }
+    savePosts(posts);
+    download(slug + '.html', postHtml);
+    setTimeout(() => download('blog.html', buildBlogHtml(posts)), 300);
+    document.getElementById('t-filename').textContent = slug + '.html';
+    document.getElementById('t-output').style.display = 'block';
+    document.getElementById('t-output').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function generateEntry() {
+    const type  = document.querySelector('input[name="e-type"]:checked').value;
+    const title = document.getElementById('e-title').value.trim();
+    const desc  = document.getElementById('e-desc').value.trim();
+    const img   = document.getElementById('e-img').value.trim();
+    const link  = document.getElementById('e-link').value.trim();
+    if (!title) { alert('Please enter a title.'); return; }
+    const entries = getEntries();
+    const entry = { type, title, desc, img, link };
+    if (editingEntryIdx >= 0) {
+      entries[editingEntryIdx] = entry; editingEntryIdx = -1;
+      document.getElementById('e-editing-banner').style.display = 'none';
+    } else { entries.unshift(entry); }
+    saveEntries(entries);
+    download('projects.html', buildProjectsHtml(entries));
+    document.getElementById('e-output').style.display = 'block';
+    document.getElementById('e-output').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function renderPostsList() {
+    const posts = getPosts(), el = document.getElementById('posts-list');
+    if (!posts.length) { el.innerHTML = '<p class="empty-state">No posts saved yet.<\/p>'; return; }
+    el.innerHTML = posts.map((p, i) => '<div class="item-row"><div class="item-info"><div class="item-title">' + p.title + '<\/div><div class="item-meta">' + p.dateStr + ' · posts\/' + p.slug + '.html<\/div><\/div><div class="item-actions"><button class="btn-small btn-small-edit" onclick="editPost(' + i + ')">Edit<\/button><button class="btn-small btn-small-danger" onclick="deletePost(' + i + ')">Delete<\/button><\/div><\/div>').join('');
+  }
+  function deletePost(i) {
+    const posts = getPosts(), removed = posts.splice(i, 1)[0];
+    if (!confirm('Delete "' + removed.title + '"?')) { posts.splice(i, 0, removed); return; }
+    savePosts(posts); renderPostsList();
+  }
+  function redownloadBlog() { download('blog.html', buildBlogHtml(getPosts())); }
+
+  function renderEntriesList() {
+    const entries = getEntries(), el = document.getElementById('entries-list');
+    if (!entries.length) { el.innerHTML = '<p class="empty-state">No entries saved yet.<\/p>'; return; }
+    el.innerHTML = entries.map((e, i) => '<div class="item-row"><div class="item-info"><div class="item-title">' + e.title + '<\/div><div class="item-meta">' + e.type + (e.link ? ' · ' + e.link : '') + '<\/div><\/div><div class="item-actions"><button class="btn-small btn-small-edit" onclick="editEntry(' + i + ')">Edit<\/button><button class="btn-small btn-small-danger" onclick="deleteEntry(' + i + ')">Delete<\/button><\/div><\/div>').join('');
+  }
+  function deleteEntry(i) {
+    const entries = getEntries(), removed = entries.splice(i, 1)[0];
+    if (!confirm('Delete "' + removed.title + '"?')) { entries.splice(i, 0, removed); return; }
+    saveEntries(entries); renderEntriesList();
+  }
+  function redownloadProjects() { download('projects.html', buildProjectsHtml(getEntries())); }
+
+  function editPost(i) {
+    const p = getPosts()[i];
+    document.getElementById('t-title').value   = p.title || '';
+    document.getElementById('t-date').value    = p.rawDate || '';
+    document.getElementById('t-excerpt').value = p.excerpt || '';
+    document.getElementById('t-content').value = p.rawContent || '';
+    document.getElementById('t-output').style.display = 'none';
+    document.getElementById('t-editing-name').textContent = p.title;
+    document.getElementById('t-editing-banner').style.display = 'block';
+    editingPostIdx = i;
+    document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+    document.getElementById('tab-thoughts').classList.add('active');
+    document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  function editEntry(i) {
+    const e = getEntries()[i];
+    const radio = document.querySelector('input[name="e-type"][value="' + e.type + '"]');
+    if (radio) radio.checked = true;
+    document.getElementById('e-title').value = e.title || '';
+    document.getElementById('e-desc').value  = e.desc  || '';
+    document.getElementById('e-img').value   = e.img   || '';
+    document.getElementById('e-link').value  = e.link  || '';
+    document.getElementById('e-output').style.display = 'none';
+    document.getElementById('e-editing-name').textContent = e.title;
+    document.getElementById('e-editing-banner').style.display = 'block';
+    editingEntryIdx = i;
+    document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+    document.getElementById('tab-entry').classList.add('active');
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  function clearForm(type) {
+    if (type === 'thought') {
+      ['t-title','t-excerpt','t-content'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('t-date').valueAsDate = new Date();
+      document.getElementById('t-output').style.display = 'none';
+      document.getElementById('t-editing-banner').style.display = 'none';
+      editingPostIdx = -1;
+    } else {
+      ['e-title','e-desc','e-img','e-link'].forEach(id => document.getElementById(id).value = '');
+      document.querySelector('input[name="e-type"][value="Project"]').checked = true;
+      document.getElementById('e-output').style.display = 'none';
+      document.getElementById('e-editing-banner').style.display = 'none';
+      document.getElementById('pdf-preview').style.display = 'none';
+      document.getElementById('pdf-status').textContent = '';
+      editingEntryIdx = -1;
+    }
+  }
+</script>
+</body>
+</html>
