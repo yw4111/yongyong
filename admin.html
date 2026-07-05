@@ -97,10 +97,13 @@
       <button class="btn btn-secondary" onclick="clearForm('thought')">Clear</button>
     </div>
     <div class="output-box" id="t-output">
-      <h3>Done — two files downloaded</h3>
+      <h3>Post saved &amp; downloaded</h3>
       <div class="step">
-        <strong>✓ <span id="t-filename"></span></strong> — move into your <code>posts/</code> folder.<br><br>
-        <strong>✓ blog.html</strong> — replace the existing <code>blog.html</code> in your outputs folder.
+        <strong>✓ <span id="t-filename"></span></strong> — move into your <code>posts/</code> folder.
+      </div>
+      <div class="btn-row" style="margin-top:1rem;">
+        <button class="btn btn-primary" onclick="clearForm('thought')">Add another thought</button>
+        <button class="btn btn-secondary" onclick="download('blog.html', buildBlogHtml(getPosts()))">Download blog.html</button>
       </div>
     </div>
   </div>
@@ -290,7 +293,6 @@
     }
     savePosts(posts);
     download(slug + '.html', postHtml);
-    setTimeout(() => download('blog.html', buildBlogHtml(posts)), 300);
     document.getElementById('t-filename').textContent = slug + '.html';
     document.getElementById('t-output').style.display = 'block';
     document.getElementById('t-output').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
