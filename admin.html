@@ -94,16 +94,18 @@
     </div>
     <div class="btn-row">
       <button class="btn btn-primary" onclick="generateThought()">Generate &amp; download ↓</button>
+      <button class="btn btn-secondary" onclick="addToQueue()">Add another thought</button>
       <button class="btn btn-secondary" onclick="clearForm('thought')">Clear</button>
     </div>
-    <div class="output-box" id="t-output">
-      <h3>Post saved &amp; downloaded</h3>
-      <div class="step">
-        <strong>✓ <span id="t-filename"></span></strong> — move into your <code>posts/</code> folder.
-      </div>
+    <div id="t-queue" style="display:none;margin-top:1.75rem;">
+      <p class="section-label">Queue (<span id="t-queue-count">0</span> post(s) ready)</p>
+      <div id="t-queue-list"></div>
       <div class="btn-row" style="margin-top:1rem;">
-        <button class="btn btn-primary" onclick="clearForm('thought')">Add another thought</button>
-        <button class="btn btn-secondary" onclick="download('blog.html', buildBlogHtml(getPosts()))">Download blog.html</button>
+        <button class="btn btn-primary" onclick="generateAll()">Generate &amp; download all ↓</button>
+      </div>
+      <div class="output-box" id="t-output" style="margin-top:1rem;">
+        <h3>Done — all files downloaded</h3>
+        <div class="step">Move each <code>.html</code> file into your <code>posts/</code> folder, and replace <code>blog.html</code>.</div>
       </div>
     </div>
   </div>
@@ -173,7 +175,7 @@
 
 <script>
   document.getElementById('t-date').valueAsDate = new Date();
-  let editingPostIdx = -1, editingEntryIdx = -1;
+  let editingPostIdx = -1, editingEntryIdx = -1, postQueue = [];
 
   // Seed legacy posts that were created manually (not via admin)
   (function seedLegacy() {
@@ -271,6 +273,68 @@
     return '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" \/>\n  <meta name="viewport" content="width=device-width, initial-scale=1" \/>\n  <title>projects &amp; notes | yong<\/title>\n  <link rel="stylesheet" href="style.css" \/>\n<\/head>\n<body>\n  <div class="container">\n    <nav><ul>\n      <li><a href="index.html">home<\/a><\/li>\n      <li><a href="blog.html">my thoughts<\/a><\/li>\n      <li><a href="projects.html">projects &amp; notes<\/a><\/li>\n      <li><a href="misc.html">misc<\/a><\/li>\n    <\/ul><\/nav>\n    <main>\n      <h1>projects &amp; notes<\/h1>\n      <p class="page-intro">write an intro here.<\/p>' + ps + ns + '\n    <\/main>\n    <footer><div class="social-links"><a href="mailto:yonggw3307@gmail.com">Email<\/a> | <a href="https://www.linkedin.com/in/yongguiwang/" target="_blank" rel="noopener">LinkedIn<\/a> | <a href="https://www.instagram.com/yw41111/" target="_blank" rel="noopener">Instagram<\/a><\/div><p class="last-updated"><\/p><\/footer>\n  <\/div>\n  <script src="site.js"><\/script>\n<\/body>\n<\/html>';
   }
 
+  function makePostHtml(title, dateStr, body) {
+    return '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" \/>\n  <meta name="viewport" content="width=device-width, initial-scale=1" \/>\n  <title>' + title + ' | yong<\/title>\n  <link rel="stylesheet" href="../style.css" \/>\n<\/head>\n<body>\n  <div class="container">\n    <nav><ul>\n      <li><a href="../index.html">home<\/a><\/li>\n      <li><a href="../blog.html">my thoughts<\/a><\/li>\n      <li><a href="../projects.html">projects &amp; notes<\/a><\/li>\n      <li><a href="../misc.html">misc<\/a><\/li>\n    <\/ul><\/nav>\n    <main>\n      <h1>' + title + '<\/h1>\n      <p style="font-size:0.85rem;color:#617891;margin-bottom:1.8rem;">' + dateStr + '<\/p>\n      ' + body + '\n    <\/main>\n    <footer><div class="social-links"><a href="mailto:yonggw3307@gmail.com">Email<\/a> | <a href="https://www.linkedin.com/in/yongguiwang/" target="_blank" rel="noopener">LinkedIn<\/a> | <a href="https://www.instagram.com/yw41111/" target="_blank" rel="noopener">Instagram<\/a><\/div><p class="last-updated"><\/p><\/footer>\n  <\/div>\n  <script src="../site.js"><\/script>\n<\/body>\n<\/html>';
+  }
+
+  function addToQueue() {
+    const title   = document.getElementById('t-title').value.trim();
+    const date    = document.getElementById('t-date').value;
+    const excerpt = document.getElementById('t-excerpt').value.trim();
+    const content = document.getElementById('t-content').value;
+    if (!title)          { alert('Please enter a title.'); return; }
+    if (!content.trim()) { alert('Please write some content.'); return; }
+    const slug = slugify(title), dateStr = formatDate(date);
+    const entry = { slug, title, dateStr, rawDate: date, excerpt, rawContent: content };
+    if (editingPostIdx >= 0) {
+      const posts = getPosts();
+      posts[editingPostIdx] = entry; editingPostIdx = -1;
+      savePosts(posts);
+      document.getElementById('t-editing-banner').style.display = 'none';
+      download(slug + '.html', makePostHtml(title, dateStr, parseContent(content)));
+      setTimeout(() => download('blog.html', buildBlogHtml(posts)), 350);
+      clearForm('thought');
+      return;
+    }
+    postQueue.push(entry);
+    clearForm('thought');
+    renderQueue();
+    document.getElementById('t-queue').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function removeFromQueue(i) {
+    postQueue.splice(i, 1);
+    renderQueue();
+  }
+
+  function renderQueue() {
+    const wrap = document.getElementById('t-queue');
+    if (!postQueue.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    document.getElementById('t-queue-count').textContent = postQueue.length;
+    document.getElementById('t-queue-list').innerHTML = postQueue.map((p, i) =>
+      '<div class="item-row"><div class="item-info"><div class="item-title">' + p.title + '<\/div><div class="item-meta">' + p.dateStr + '<\/div><\/div><div class="item-actions"><button class="btn-small btn-small-danger" onclick="removeFromQueue(' + i + ')">Remove<\/button><\/div><\/div>'
+    ).join('');
+    document.getElementById('t-output').style.display = 'none';
+  }
+
+  function generateAll() {
+    if (!postQueue.length) { alert('Add at least one post to the queue first.'); return; }
+    const posts = getPosts();
+    postQueue.forEach((entry, idx) => {
+      const html = makePostHtml(entry.title, entry.dateStr, parseContent(entry.rawContent));
+      const ex = posts.findIndex(p => p.slug === entry.slug);
+      if (ex >= 0) posts[ex] = entry; else posts.unshift(entry);
+      setTimeout(() => download(entry.slug + '.html', html), idx * 350);
+    });
+    savePosts(posts);
+    setTimeout(() => download('blog.html', buildBlogHtml(posts)), postQueue.length * 350 + 300);
+    postQueue = [];
+    renderQueue();
+    document.getElementById('t-queue').style.display = 'block';
+    document.getElementById('t-output').style.display = 'block';
+  }
+
   function generateThought() {
     const title   = document.getElementById('t-title').value.trim();
     const date    = document.getElementById('t-date').value;
@@ -280,10 +344,8 @@
     if (!content.trim()) { alert('Please write some content.'); return; }
     const slug    = slugify(title);
     const dateStr = formatDate(date);
-    const body    = parseContent(content);
-    const postHtml = '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" \/>\n  <meta name="viewport" content="width=device-width, initial-scale=1" \/>\n  <title>' + title + ' | yong<\/title>\n  <link rel="stylesheet" href="../style.css" \/>\n<\/head>\n<body>\n  <div class="container">\n    <nav><ul>\n      <li><a href="../index.html">home<\/a><\/li>\n      <li><a href="../blog.html">my thoughts<\/a><\/li>\n      <li><a href="../projects.html">projects &amp; notes<\/a><\/li>\n      <li><a href="../misc.html">misc<\/a><\/li>\n    <\/ul><\/nav>\n    <main>\n      <h1>' + title + '<\/h1>\n      <p style="font-size:0.85rem;color:#617891;margin-bottom:1.8rem;">' + dateStr + '<\/p>\n      ' + body + '\n    <\/main>\n    <footer><div class="social-links"><a href="mailto:yonggw3307@gmail.com">Email<\/a> | <a href="https://www.linkedin.com/in/yongguiwang/" target="_blank" rel="noopener">LinkedIn<\/a> | <a href="https://www.instagram.com/yw41111/" target="_blank" rel="noopener">Instagram<\/a><\/div><p class="last-updated"><\/p><\/footer>\n  <\/div>\n  <script src="../site.js"><\/script>\n<\/body>\n<\/html>';
-    const posts = getPosts();
-    const entry = { slug, title, dateStr, rawDate: date, excerpt, rawContent: content };
+    const entry   = { slug, title, dateStr, rawDate: date, excerpt, rawContent: content };
+    const posts   = getPosts();
     if (editingPostIdx >= 0) {
       posts[editingPostIdx] = entry; editingPostIdx = -1;
       document.getElementById('t-editing-banner').style.display = 'none';
@@ -292,10 +354,8 @@
       if (ex >= 0) posts[ex] = entry; else posts.unshift(entry);
     }
     savePosts(posts);
-    download(slug + '.html', postHtml);
-    document.getElementById('t-filename').textContent = slug + '.html';
-    document.getElementById('t-output').style.display = 'block';
-    document.getElementById('t-output').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    download(slug + '.html', makePostHtml(title, dateStr, parseContent(content)));
+    download('blog.html', buildBlogHtml(posts));
   }
 
   function generateEntry() {
