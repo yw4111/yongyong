@@ -16,45 +16,73 @@
     </ul></nav>
     <h1>my thoughts</h1>
     <p class="subtitle"> when i think of nonsense, i update this log</p>
+    <div class="filter-row">
+      <button class="filter-btn active" data-filter="all">all</button>
+      <button class="filter-btn" data-filter="trading">trading</button>
+      <button class="filter-btn" data-filter="sports">sports</button>
+      <button class="filter-btn" data-filter="probability">probability</button>
+      <button class="filter-btn" data-filter="economics">economics</button>
+      <button class="filter-btn" data-filter="philosophy">philosophy</button>
+    </div>
     <div class="notes-grid">
-      <a class="note" href="posts/ai-ethics.html">
+      <a class="note" href="posts/ai-ethics.html" data-cats="philosophy">
         <div class="note-date">July 2026</div>
         <div class="note-title">ai ethics</div>
         <div class="note-excerpt">can we teach ai to be ethical? what does it even mean?</div>
+        <div class="note-tags"><span class="note-tag">philosophy</span></div>
       </a>
-      <a class="note" href="posts/framing.html">
+      <a class="note" href="posts/framing.html" data-cats="trading sports">
         <div class="note-date">July 2026</div>
         <div class="note-title">framing</div>
         <div class="note-excerpt">why do bookies use such complicated odds?</div>
+        <div class="note-tags"><span class="note-tag">trading</span><span class="note-tag">sports</span></div>
       </a>
-      <a class="note" href="posts/the-berkson-paradox.html">
+      <a class="note" href="posts/the-berkson-paradox.html" data-cats="probability">
         <div class="note-date">July 2026</div>
         <div class="note-title">the berkson paradox</div>
         <div class="note-excerpt">why do two positive traits often seem negatively correlated?</div>
+        <div class="note-tags"><span class="note-tag">probability</span></div>
       </a>
-      <a class="note" href="posts/behavioural-economics.html">
+      <a class="note" href="posts/behavioural-economics.html" data-cats="economics">
         <div class="note-date">July 2026</div>
         <div class="note-title">behavioural economics</div>
         <div class="note-excerpt">is behavioural economics even real?</div>
+        <div class="note-tags"><span class="note-tag">economics</span></div>
       </a>
-      <a class="note" href="posts/betting-on-the-world-cup-2.html">
+      <a class="note" href="posts/betting-on-the-world-cup-2.html" data-cats="trading sports">
         <div class="note-date">July 2026</div>
         <div class="note-title">betting on the world cup 2</div>
         <div class="note-excerpt">can i use polymarket to trade matched decisions live?</div>
+        <div class="note-tags"><span class="note-tag">trading</span><span class="note-tag">sports</span></div>
       </a>
-      <a class="note" href="posts/betting-on-the-world-cup.html">
+      <a class="note" href="posts/betting-on-the-world-cup.html" data-cats="trading sports">
         <div class="note-date">July 2026</div>
         <div class="note-title">betting on the world cup</div>
         <div class="note-excerpt">how can i treat the sportsbooks like a market?</div>
+        <div class="note-tags"><span class="note-tag">trading</span><span class="note-tag">sports</span></div>
       </a>
-      <a class="note" href="posts/gym-lockers.html">
+      <a class="note" href="posts/gym-lockers.html" data-cats="probability">
         <div class="note-date">June 2026</div>
         <div class="note-title">gym lockers</div>
         <div class="note-excerpt">what economic phenomena is it that makes us choose different gym lockers?</div>
+        <div class="note-tags"><span class="note-tag">probability</span></div>
       </a>
     </div>
     <footer><div class="social-links"><a href="mailto:yonggw3307@gmail.com">Email</a> | <a href="https://www.linkedin.com/in/yongguiwang/" target="_blank" rel="noopener">LinkedIn</a> | <a href="https://www.instagram.com/yw41111/" target="_blank" rel="noopener">Instagram</a></div><p class="last-updated"></p></footer>
   </div>
   <script src="site.js"></script>
+  <script>
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        document.querySelectorAll('.note').forEach(note => {
+          const cats = (note.dataset.cats || '').split(' ');
+          note.style.display = (filter === 'all' || cats.includes(filter)) ? '' : 'none';
+        });
+      });
+    });
+  </script>
 </body>
 </html>
