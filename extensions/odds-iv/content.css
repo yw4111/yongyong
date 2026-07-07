@@ -1,0 +1,64 @@
+/* Spans wrapping detected odds */
+span.odds-iv-span {
+  cursor: help;
+  border-bottom: 1px dashed rgba(99, 179, 237, 0.6);
+  transition: background 0.15s;
+}
+
+span.odds-iv-span:hover {
+  background: rgba(99, 179, 237, 0.12);
+  border-radius: 2px;
+}
+
+/* ── Toggle (replace) mode ──────────────────────────────────────────────────
+   We NEVER change textContent — we just hide the original text with
+   font-size:0 and show the IV via ::after. This means we never write to
+   the DOM in a way that triggers the MutationObserver. */
+
+span.odds-iv-span.iv-mode {
+  font-size: 0 !important;
+  border-bottom-color: #2b6cb0;
+  white-space: nowrap;
+}
+
+span.odds-iv-span.iv-mode::after {
+  content: attr(data-iv-display);  /* e.g. "66.67%" */
+  font-size: var(--odds-iv-font-size, 14px);
+  color: #2b6cb0;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+/* Hover in toggle mode: remove iv-mode to reveal original text */
+span.odds-iv-span.iv-mode.iv-hovered {
+  font-size: inherit !important;
+  border-bottom-color: rgba(99, 179, 237, 0.6);
+}
+
+span.odds-iv-span.iv-mode.iv-hovered::after {
+  content: none;
+}
+
+/* Tooltip */
+#odds-iv-tooltip {
+  position: absolute;
+  z-index: 2147483647;
+  background: #1a202c;
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 6px;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+#odds-iv-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}

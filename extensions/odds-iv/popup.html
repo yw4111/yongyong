@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Odds → IV</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 240px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f7fafc;
+      color: #2d3748;
+    }
+
+    header {
+      background: #2b6cb0;
+      color: white;
+      padding: 14px 16px 10px;
+    }
+
+    header h1 {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    header p {
+      font-size: 11px;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    .body {
+      padding: 14px 16px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .sub {
+      font-size: 11px;
+      color: #718096;
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
+    /* Toggle switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #cbd5e0;
+      border-radius: 24px;
+      transition: background 0.2s;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    input:checked + .slider { background: #2b6cb0; }
+    input:checked + .slider::before { transform: translateX(18px); }
+
+    /* Disabled state — grey out everything below the power row */
+    body.disabled .body-controls {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    /* Power row sits above the divider, always active */
+    .power-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #edf2f7;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .power-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .power-label .status {
+      font-weight: 400;
+      font-size: 11px;
+      margin-left: 6px;
+    }
+
+    body.disabled .power-label .status { color: #a0aec0; }
+    body:not(.disabled) .power-label .status { color: #38a169; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 10px 0;
+    }
+
+    .cheatsheet {
+      font-size: 11px;
+      color: #4a5568;
+      line-height: 1.7;
+    }
+
+    .cheatsheet b { color: #2d3748; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Odds → Implied Probability</h1>
+    <p>Hover over any odds to see IV %</p>
+  </header>
+
+  <!-- Power on/off — always accessible -->
+  <div class="power-row">
+    <span class="power-label">
+      Extension
+      <span class="status" id="statusText">On</span>
+    </span>
+    <label class="switch">
+      <input type="checkbox" id="enabledSwitch" checked />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- Rest of controls — greyed out when disabled -->
+  <div class="body body-controls">
+    <div class="row">
+      <div>
+        <div class="label">Replace all odds</div>
+        <div class="sub">Shows IV by default;<br>hover to restore original</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="toggleSwitch" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="cheatsheet">
+      <b>Format detection:</b><br>
+      American &nbsp; <b>+150</b> / <b>-110</b><br>
+      Decimal &nbsp;&nbsp;&nbsp; <b>2.50</b> / <b>1.91</b><br>
+      Fractional &nbsp;<b>5/1</b> &nbsp;/ <b>11/4</b>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
