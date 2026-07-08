@@ -4,18 +4,29 @@
 
 function parseOdds(text) {
   text = text.trim();
+
+  // American: explicit sign, ±100–9999
   if (/^[+-]\d{2,4}$/.test(text)) {
-    return { format: "american", value: parseInt(text, 10) };
+    const n = parseInt(text, 10);
+    if (Math.abs(n) >= 100 && Math.abs(n) <= 9999) return { format: "american", value: n };
+    return null;
   }
+
+  // Fractional: e.g. 5/1, 11/4 — implied probability must be 0.5%–99.5%
   if (/^\d{1,3}\/\d{1,3}$/.test(text)) {
     const [num, den] = text.split("/").map(Number);
     if (den === 0) return null;
+    const prob = den / (num + den);
+    if (prob < 0.005 || prob > 0.995) return null;
     return { format: "fractional", num, den };
   }
+
+  // Decimal: exactly 2 decimal places, 1.01–200.00
   if (/^\d{1,3}\.\d{2}$/.test(text)) {
     const n = parseFloat(text);
-    if (n >= 1.01 && n <= 1001) return { format: "decimal", value: n };
+    if (n >= 1.01 && n <= 200.00) return { format: "decimal", value: n };
   }
+
   return null;
 }
 
@@ -71,23 +82,60 @@ function hideTooltip() {
   if (tip) tip.classList.remove("visible");
 }
 
+// ── Currency detection ────────────────────────────────────────────────────────
+// Catches both "£2.50" (symbol in same text node) and "<span>£</span>2.50"
+// (symbol in a sibling element).
+
+const CURRENCY_RE = /[£$€¥₹₩₽¢]/;
+
+function nodeHasCurrencyContext(node) {
+  // Currency in the same text node (e.g. "£2.50 stake")
+  if (CURRENCY_RE.test(node.nodeValue)) return true;
+
+  // Currency in an immediately preceding sibling node/element
+  const prev = node.previousSibling;
+  if (prev) {
+    const prevText = prev.nodeType === Node.TEXT_NODE
+      ? prev.nodeValue
+      : prev.textContent || "";
+    if (CURRENCY_RE.test(prevText)) return true;
+  }
+
+  // Currency in the parent element's direct text or a preceding child
+  const parent = node.parentElement;
+  if (parent && CURRENCY_RE.test(parent.textContent || "")) {
+    // Only bail if the currency is in a sibling, not a descendant of us
+    for (const child of parent.childNodes) {
+      if (child === node) break; // stop at our own node
+      const childText = child.nodeType === Node.TEXT_NODE
+        ? child.nodeValue
+        : child.textContent || "";
+      if (CURRENCY_RE.test(childText)) return true;
+    }
+  }
+
+  return false;
+}
+
 // ── Text node wrapping ────────────────────────────────────────────────────────
 
 const SKIP_TAGS = new Set([
-  "SCRIPT","STYLE","NOSCRIPT","TEXTAREA","INPUT",
-  "SELECT","OPTION","IFRAME","SVG","CANVAS"
+  "SCRIPT","STYLE","NOSCRIPT","TEXTAREA","INPUT","SELECT","OPTION",
+  "IFRAME","SVG","CANVAS","NAV","FOOTER","TIME","CODE","PRE"
 ]);
 
-// Tight patterns — lookbehinds/aheads block currency, letters, digits, dots,
-// slashes, and % so we never re-match our own injected content.
-const ODDS_RE = /(?<![£$€\d.a-zA-Z%])([+-]\d{2,4})(?![\d.a-zA-Z%])|(?<![£$€\d.\/a-zA-Z%])(\d{1,3}\.\d{2})(?![\d.a-zA-Z%\/])|(?<![£$€\d.\/a-zA-Z%])(\d{1,3})\/(\d{1,3})(?![\/\d])/g;
+// Lookbehinds block currency/letters/digits/% so we never re-match our own output.
+// The % lookahead specifically prevents re-matching "66.67" inside "66.67%".
+const ODDS_RE = /(?<![£$€¥₹₩₽¢\d.a-zA-Z%])([+-]\d{2,4})(?![\d.a-zA-Z%])|(?<![£$€¥₹₩₽¢\d.\/a-zA-Z%])(\d{1,3}\.\d{2})(?![\d.a-zA-Z%\/])|(?<![£$€¥₹₩₽¢\d.\/a-zA-Z%])(\d{1,3})\/(\d{1,3})(?![\/\d])/g;
 
 function wrapTextNode(node) {
-  // Never process text nodes inside our own spans
   const parent = node.parentElement;
   if (!parent) return;
   if (parent.classList.contains(SPAN_CLASS) || parent.closest(`.${SPAN_CLASS}`)) return;
   if (SKIP_TAGS.has(parent.tagName)) return;
+
+  // Skip anything near a currency symbol — these are prices/stakes, not odds
+  if (nodeHasCurrencyContext(node)) return;
 
   const text = node.nodeValue;
   if (!text || !text.trim()) return;
@@ -99,7 +147,7 @@ function wrapTextNode(node) {
   let match;
 
   while ((match = ODDS_RE.exec(text)) !== null) {
-    const raw = match[0];
+    const raw    = match[0];
     const parsed = parseOdds(raw);
     if (!parsed) continue;
     const iv = toImpliedProbability(parsed);
@@ -111,16 +159,15 @@ function wrapTextNode(node) {
     }
 
     const span = document.createElement("span");
-    span.className = SPAN_CLASS;
-    span.dataset.original = raw;
-    span.dataset.iv = String(iv);
-    span.dataset.ivDisplay = iv + "%";   // used by CSS ::after
-    span.dataset.format = formatLabel(parsed);
-    span.textContent = raw;              // always the original — NEVER changed
+    span.className         = SPAN_CLASS;
+    span.dataset.original  = raw;
+    span.dataset.iv        = String(iv);
+    span.dataset.ivDisplay = iv + "%";  // consumed by CSS ::after
+    span.dataset.format    = formatLabel(parsed);
+    span.textContent       = raw;       // NEVER changed — toggle uses CSS only
 
     if (toggleMode) span.classList.add("iv-mode");
 
-    // Capture the parent element's computed font-size so ::after matches
     const fs = window.getComputedStyle(parent).fontSize;
     if (fs) span.style.setProperty("--odds-iv-font-size", fs);
 
@@ -158,8 +205,7 @@ function walkNode(root) {
 }
 
 // ── Toggle mode ───────────────────────────────────────────────────────────────
-// We only add/remove CSS classes — we NEVER change span.textContent.
-// This means the MutationObserver never fires from our own code.
+// Only adds/removes CSS classes — textContent is never touched.
 
 function applyToggleToSpans() {
   document.querySelectorAll(`.${SPAN_CLASS}`).forEach(span => {
@@ -178,14 +224,11 @@ document.addEventListener("mouseover", e => {
   if (!span) return;
 
   if (toggleMode) {
-    // Add hovered class → CSS hides ::after and reveals original text
     span.classList.add("iv-hovered");
   } else {
-    const iv   = span.dataset.iv;
-    const fmt  = span.dataset.format;
     const rect = span.getBoundingClientRect();
     showTooltip(
-      `IV: ${iv}%  (${fmt})`,
+      `IV: ${span.dataset.iv}%  (${span.dataset.format})`,
       rect.left + window.scrollX,
       rect.top  + window.scrollY - 32
     );
@@ -195,7 +238,7 @@ document.addEventListener("mouseover", e => {
 document.addEventListener("mouseout", e => {
   const span = e.target.closest(`.${SPAN_CLASS}`);
   if (!span) return;
-  if (span.contains(e.relatedTarget)) return; // still inside the span
+  if (span.contains(e.relatedTarget)) return;
 
   if (toggleMode) {
     span.classList.remove("iv-hovered");
@@ -204,7 +247,7 @@ document.addEventListener("mouseout", e => {
   }
 });
 
-// ── MutationObserver for dynamic content ─────────────────────────────────────
+// ── MutationObserver ──────────────────────────────────────────────────────────
 
 const observer = new MutationObserver(mutations => {
   mutations.forEach(m => {
