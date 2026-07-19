@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>referees | yong</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="container">
+    <nav><ul>
+      <li><a href="../index.html">home</a></li>
+      <li><a href="../blog.html">my thoughts</a></li>
+      <li><a href="../projects.html">projects &amp; notes</a></li>
+      <li><a href="../misc.html">misc</a></li>
+    </ul></nav>
+    <main>
+      <h1>referees</h1>
+      <p style="font-size:0.85rem;color:#617891;margin-bottom:1.8rem;">July 2026</p>
+      <p>can we get rid of them completely?</p>
+
+      <p>watching the world cup this summer has had me thinking about this. VAR was supposed to fix things, but it's created its own set of complaints - slow, inconsistent, still subjective.</p>
+
+      <p>this post from <a href="https://www.instagram.com/mathginics/" target="_blank" rel="noopener">@mathginics</a> is a good example of what algorithmic refereeing could look like:</p>
+
+      <figure style="margin: 1.5rem 0; text-align: center;">
+        <img src="../files/mathginics-offside-1.jpg" alt="mathginics offside rule formalisation page 1" style="max-width: 100%; border: 1px solid rgba(213,184,147,0.15); border-radius: 4px;" />
+        <img src="../files/mathginics-offside-2.jpg" alt="mathginics offside rule formalisation page 2" style="max-width: 100%; border: 1px solid rgba(213,184,147,0.15); border-radius: 4px; margin-top: 0.75rem;" />
+        <figcaption style="font-size: 0.78rem; color: #617891; margin-top: 0.5rem;">via <a href="https://www.instagram.com/mathginics/" target="_blank" rel="noopener">@mathginics</a></figcaption>
+      </figure>
+
+      <p>an attacking player is in an offside position if a &gt; max(1/2, b, c), where a is the attacker's x-coordinate, b is the ball's position when played, and c is the second-last defender's position. this is exactly what the offside rule already says - just written as a formula.</p>
+
+      <p>VAR already does something close to this, but the implementation is inconsistent and the "active play" clause introduces subjectivity again. the base offside call should just be automatic.</p>
+
+      <p>the harder question is active play - interfering with an opponent, gaining an advantage. that's much harder to formalise. but things like whether a ball crossed the line, whether a foul occurred based on contact and direction, whether a player was offside - these could plausibly be algorithmic with enough sensor data.</p>
+
+      <p>the handball rule is a mess because intent is uncodifiable. but that's actually an argument for getting rid of that rule, not for keeping human referees.</p>
+
+      <p>i don't think referees disappear entirely. the judgement calls that require context, intent, reading the situation - those stay human. but a lot of what causes the biggest controversies is stuff that should just be maths.</p>
+    </main>
+    <footer><div class="social-links"><a href="mailto:yonggw3307@gmail.com">Email</a> | <a href="https://www.linkedin.com/in/yongguiwang/" target="_blank" rel="noopener">LinkedIn</a> | <a href="https://www.instagram.com/yw41111/" target="_blank" rel="noopener">Instagram</a></div><p class="last-updated"></p></footer>
+  </div>
+  <script src="../site.js"></script>
+</body>
+</html>

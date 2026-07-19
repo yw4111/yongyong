@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>xg | yong</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="container">
+    <nav><ul>
+      <li><a href="../index.html">home</a></li>
+      <li><a href="../blog.html">my thoughts</a></li>
+      <li><a href="../projects.html">projects &amp; notes</a></li>
+      <li><a href="../misc.html">misc</a></li>
+    </ul></nav>
+    <main>
+      <h1>xg</h1>
+      <p style="font-size:0.85rem;color:#617891;margin-bottom:1.8rem;">July 2026</p>
+      <p>how do we replace xg?</p>
+
+      <p>xg is the total expected goals scored by a team, calculated by summing the probability of scoring from each shot. it's a relatively good indicator of how well a team is shooting, but i take a lot of issues with it when used for anything beyond that.</p>
+
+      <p>fans often use xg as a measure of how many goals a team "should" have scored, and therefore their performance in a match. i think this is completely wrong.</p>
+
+      <p>a few reasons:</p>
+
+      <p>xg doesn't take into account the quality of the players. would you rather have a striker take a 0.3 xg shot or a defender take a 0.5 xg shot? the probabilities might suggest the latter, but any football fan would disagree.</p>
+
+      <p>shots are always unique. no two shots will ever be from exactly the same position, and even if they were, players could be at different heights, off balance, defenders moving at different speeds. the only way to combat this is to generalise situations, which then compromises the metric.</p>
+
+      <p>most importantly, xg only accounts for shots. if someone is stretching and just grazes the ball as it rolls past, it might count as a high xg chance. if someone misses the ball entirely, it doesn't count at all. for me, both of these are very similar in terms of potential to score, and neither is well-reflected by xg.</p>
+
+      <p>so how do we replace it? i've been thinking about incorporating momentum graphs - some football analytics sites have started introducing these, and the from first principles podcast did an interesting breakdown of what parameters they use. the idea is to measure the continuous flow of a match rather than just discrete shot events.</p>
+
+      <p>a better metric might combine chance quality (with player identity factored in), opposition pressure at the time of the chance, and momentum at that point in the match - potentially even integratable over time to give a single performance score.</p>
+
+      <p>i'll think more about the specifics, but the starting point is that xg is a decent shot quality metric and a bad performance metric.</p>
+    </main>
+    <footer><div class="social-links"><a href="mailto:yonggw3307@gmail.com">Email</a> | <a href="https://www.linkedin.com/in/yongguiwang/" target="_blank" rel="noopener">LinkedIn</a> | <a href="https://www.instagram.com/yw41111/" target="_blank" rel="noopener">Instagram</a></div><p class="last-updated"></p></footer>
+  </div>
+  <script src="../site.js"></script>
+</body>
+</html>
